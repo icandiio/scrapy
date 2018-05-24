@@ -37,6 +37,13 @@ class Crawler(object):
         d = dict(overridden_settings(self.settings))
         logger.info("Overridden settings: %(settings)r", {'settings': d})
 
+        """
+        通信机制:
+        SignalManager主要是利用开源的python库pydispatch作消息的发送和路由.
+        scrapy使用它发送关键的消息事件给关心者，如爬取开始，爬取结束等消息
+        
+        通过send_catch_log_deferred来发送消息，通过connect方法来注册关心消息的处理函数
+        """
         self.signals = SignalManager(self)
         self.stats = load_object(self.settings['STATS_CLASS'])(self)
 
@@ -76,11 +83,11 @@ class Crawler(object):
         self.crawling = True
 
         try:
-            self.spider = self._create_spider(*args, **kwargs)
-            self.engine = self._create_engine()
-            start_requests = iter(self.spider.start_requests())
-            yield self.engine.open_spider(self.spider, start_requests)
-            yield defer.maybeDeferred(self.engine.start)
+            self.spider = self._create_spider(*args, **kwargs)  # spider
+            self.engine = self._create_engine()  # engine
+            start_requests = iter(self.spider.start_requests())  # request
+            yield self.engine.open_spider(self.spider, start_requests)  # engine,spider,request 三者联动，创建enginge关键组件
+            yield defer.maybeDeferred(self.engine.start)  # 启动执行引擎回调，reactor.run 整个流程才开始运转
         except Exception:
             # In Python 2 reraising an exception after yield discards
             # the original traceback (see https://bugs.python.org/issue7563),
@@ -136,7 +143,7 @@ class CrawlerRunner(object):
         self.settings = settings
         self.spider_loader = _get_spider_loader(settings)
         self._crawlers = set()
-        self._active = set()
+        self._active = set()  # 跟踪所有激活的crawler任务
 
     @property
     def spiders(self):
@@ -167,13 +174,13 @@ class CrawlerRunner(object):
 
         :param dict kwargs: keyword arguments to initialize the spider
         """
-        crawler = self.create_crawler(crawler_or_spidercls)
-        return self._crawl(crawler, *args, **kwargs)
+        crawler = self.create_crawler(crawler_or_spidercls)  # 创建爬取任务
+        return self._crawl(crawler, *args, **kwargs)  # 开启爬取任务执行
 
     def _crawl(self, crawler, *args, **kwargs):
         self.crawlers.add(crawler)
         d = crawler.crawl(*args, **kwargs)
-        self._active.add(d)
+        self._active.add(d)  # 加入激活爬取任务集合
 
         def _done(result):
             self.crawlers.discard(crawler)
@@ -284,10 +291,10 @@ class CrawlerProcess(CrawlerRunner):
                 return
             d.addBoth(self._stop_reactor)
 
-        reactor.installResolver(self._get_dns_resolver())
+        reactor.installResolver(self._get_dns_resolver())  # dns 缓存
         tp = reactor.getThreadPool()
         tp.adjustPoolsize(maxthreads=self.settings.getint('REACTOR_THREADPOOL_MAXSIZE'))
-        reactor.addSystemEventTrigger('before', 'shutdown', self.stop)
+        reactor.addSystemEventTrigger('before', 'shutdown', self.stop)  # reactor容器daemon启动
         reactor.run(installSignalHandlers=False)  # blocking call
 
     def _get_dns_resolver(self):

@@ -48,9 +48,9 @@ def _get_commands_from_entry_points(inproject, group='scrapy.commands'):
 
 
 def _get_commands_dict(settings, inproject):
-    cmds = _get_commands_from_module('scrapy.commands', inproject)
+    cmds = _get_commands_from_module('scrapy.commands', inproject)  # 基础命令
     cmds.update(_get_commands_from_entry_points(inproject))
-    cmds_module = settings['COMMANDS_MODULE']
+    cmds_module = settings['COMMANDS_MODULE']  # 扩展命令
     if cmds_module:
         cmds.update(_get_commands_from_module(cmds_module, inproject))
     return cmds
@@ -143,7 +143,7 @@ def execute(argv=None, settings=None):
     # ------------------------------------------------------------------
 
     inproject = inside_project()
-    cmds = _get_commands_dict(settings, inproject)
+    cmds = _get_commands_dict(settings, inproject)  # map {cmd name:cmd instance}
     cmdname = _pop_command_name(argv)
     parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(), \
                                    conflict_handler='resolve')
@@ -154,17 +154,18 @@ def execute(argv=None, settings=None):
         _print_unknown_command(settings, cmdname, inproject)
         sys.exit(2)
 
-    cmd = cmds[cmdname]
+    cmd = cmds[cmdname]  # 获取执行时命令对象
     parser.usage = "scrapy %s %s" % (cmdname, cmd.syntax())
     parser.description = cmd.long_desc()
     settings.setdict(cmd.default_settings, priority='command')
+    # 命令对象挂载属性
     cmd.settings = settings
     cmd.add_options(parser)
     opts, args = parser.parse_args(args=argv[1:])
     _run_print_help(parser, cmd.process_options, args, opts)
 
-    cmd.crawler_process = CrawlerProcess(settings)
-    _run_print_help(parser, _run_command, cmd, args, opts)
+    cmd.crawler_process = CrawlerProcess(settings)  # 实例化爬取进程，默认初始化
+    _run_print_help(parser, _run_command, cmd, args, opts)  # 执行命令
     sys.exit(cmd.exitcode)
 
 
@@ -173,6 +174,11 @@ def _run_command(cmd, args, opts):
         _run_command_profiled(cmd, args, opts)
     else:
         cmd.run(args, opts)
+        """
+        cmd = crawl
+        crawl() => 命令内部执行爬虫初始化
+        start() => 启动运行 
+        """
 
 
 def _run_command_profiled(cmd, args, opts):
