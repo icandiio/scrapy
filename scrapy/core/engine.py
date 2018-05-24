@@ -25,7 +25,7 @@ class Slot(object):
 
     def __init__(self, start_requests, close_if_idle, nextcall, scheduler):
         self.closing = False
-        self.inprogress = set() # requests in progress
+        self.inprogress = set()  # requests in progress，正在处理的请求
         self.start_requests = iter(start_requests)
         self.close_if_idle = close_if_idle
         self.nextcall = nextcall
@@ -140,9 +140,9 @@ class ExecutionEngine(object):
     def _needs_backout(self, spider):
         slot = self.slot
         return not self.running \
-            or slot.closing \
-            or self.downloader.needs_backout() \
-            or self.scraper.slot.needs_backout()
+               or slot.closing \
+               or self.downloader.needs_backout() \
+               or self.scraper.slot.needs_backout()
 
     def _next_request_from_scheduler(self, spider):
         slot = self.slot
@@ -212,7 +212,7 @@ class ExecutionEngine(object):
 
     def schedule(self, request, spider):
         self.signals.send_catch_log(signal=signals.request_scheduled,
-                request=request, spider=spider)
+                                    request=request, spider=spider)
         if not self.slot.scheduler.enqueue_request(request):
             self.signals.send_catch_log(signal=signals.request_dropped,
                                         request=request, spider=spider)
@@ -225,19 +225,20 @@ class ExecutionEngine(object):
     def _downloaded(self, response, slot, request, spider):
         slot.remove_request(request)
         return self.download(response, spider) \
-                if isinstance(response, Request) else response
+            if isinstance(response, Request) else response
 
     def _download(self, request, spider):
         slot = self.slot
         slot.add_request(request)
+
         def _on_success(response):
             assert isinstance(response, (Response, Request))
             if isinstance(response, Response):
-                response.request = request # tie request to response received
+                response.request = request  # tie request to response received
                 logkws = self.logformatter.crawled(request, response, spider)
                 logger.log(*logformatter_adapter(logkws), extra={'spider': spider})
                 self.signals.send_catch_log(signal=signals.response_received, \
-                    response=response, request=request, spider=spider)
+                                            response=response, request=request, spider=spider)
             return response
 
         def _on_complete(_):
@@ -252,11 +253,13 @@ class ExecutionEngine(object):
     @defer.inlineCallbacks
     def open_spider(self, spider, start_requests=(), close_if_idle=True):
         assert self.has_capacity(), "No free spider slot when opening %r" % \
-            spider.name
+                                    spider.name
         logger.info("Spider opened", extra={'spider': spider})
+        # CallLaterOnce 稍后调用一次
         nextcall = CallLaterOnce(self._next_request, spider)
         scheduler = self.scheduler_cls.from_crawler(self.crawler)
         start_requests = yield self.scraper.spidermw.process_start_requests(start_requests, spider)
+        # slot 封装 engine 对 request处理流程
         slot = Slot(start_requests, close_if_idle, nextcall, scheduler)
         self.slot = slot
         self.spider = spider
@@ -264,8 +267,10 @@ class ExecutionEngine(object):
         yield self.scraper.open_spider(spider)
         self.crawler.stats.open_spider(spider)
         yield self.signals.send_catch_log_deferred(signals.spider_opened, spider=spider)
-        slot.nextcall.schedule()
-        slot.heartbeat.start(5)
+
+        # 开启request处理流程
+        slot.nextcall.schedule()  # 编程式调用,手动调用
+        slot.heartbeat.start(5)  # 5s心跳周期性调用
 
     def _spider_idle(self, spider):
         """Called when a spider gets idle. This function is called when there
@@ -276,9 +281,9 @@ class ExecutionEngine(object):
         again for this spider.
         """
         res = self.signals.send_catch_log(signal=signals.spider_idle, \
-            spider=spider, dont_log=DontCloseSpider)
+                                          spider=spider, dont_log=DontCloseSpider)
         if any(isinstance(x, Failure) and isinstance(x.value, DontCloseSpider) \
-                for _, x in res):
+               for _, x in res):
             return
 
         if self.spider_is_idle(spider):
@@ -303,6 +308,7 @@ class ExecutionEngine(object):
                     exc_info=failure_to_exc_info(failure),
                     extra={'spider': spider}
                 )
+
             return errback
 
         dfd.addBoth(lambda _: self.downloader.close())
