@@ -1,25 +1,25 @@
-import six
-import signal
 import logging
-import warnings
-
+import signal
 import sys
+
+import six
+import warnings
 from twisted.internet import reactor, defer
 from zope.interface.verify import verifyClass, DoesNotImplement
 
+from scrapy import signals
 from scrapy.core.engine import ExecutionEngine
-from scrapy.resolver import CachingThreadedResolver
-from scrapy.interfaces import ISpiderLoader
+from scrapy.exceptions import ScrapyDeprecationWarning
 from scrapy.extension import ExtensionManager
+from scrapy.interfaces import ISpiderLoader
+from scrapy.resolver import CachingThreadedResolver
 from scrapy.settings import overridden_settings, Settings
 from scrapy.signalmanager import SignalManager
-from scrapy.exceptions import ScrapyDeprecationWarning
-from scrapy.utils.ossignal import install_shutdown_handlers, signal_names
-from scrapy.utils.misc import load_object
 from scrapy.utils.log import (
     LogCounterHandler, configure_logging, log_scrapy_info,
     get_scrapy_root_handler, install_scrapy_root_handler)
-from scrapy import signals
+from scrapy.utils.misc import load_object
+from scrapy.utils.ossignal import install_shutdown_handlers, signal_names
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,9 @@ class Crawler(object):
             self.spider = self._create_spider(*args, **kwargs)  # spider
             self.engine = self._create_engine()  # engine
             start_requests = iter(self.spider.start_requests())  # request
-            yield self.engine.open_spider(self.spider, start_requests)  # engine,spider,request 三者联动，创建enginge关键组件
+
+            # 爬取的准备工作，engine,spider,request 三者关系建立，创建enginge关键组件
+            yield self.engine.open_spider(self.spider, start_requests)
             yield defer.maybeDeferred(self.engine.start)  # 启动执行引擎回调，reactor.run 整个流程才开始运转
         except Exception:
             # In Python 2 reraising an exception after yield discards
