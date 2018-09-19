@@ -2,8 +2,7 @@ from os.path import dirname, join
 from pkg_resources import parse_version
 from setuptools import setup, find_packages, __version__ as setuptools_version
 
-with open(join(dirname(__file__), 'scrapy/VERSION'), 'rb') as f:
-    version = f.read().decode('ascii').strip()
+version = "1.5.0"
 
 
 def has_environment_marker_platform_impl_support():
@@ -34,7 +33,7 @@ setup(
     maintainer='Pablo Hoffman',
     maintainer_email='pablo@pablohoffman.com',
     license='BSD',
-    packages=find_packages(exclude=('tests', 'tests.*', 'pyxdev', 'pyxde.*')),
+    packages=find_packages(exclude=('tests', 'tests.*', '_pyxdev', '_pyxdev.*')),
     include_package_data=True,
     zip_safe=False,
     entry_points={
