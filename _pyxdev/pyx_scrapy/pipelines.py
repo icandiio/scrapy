@@ -2,6 +2,7 @@
 
 import logging
 
+from pymongo import MongoClient
 from pyx_gutils.util import datetime_util
 from pyx_scrapy_exts.const import Entity, ItemK
 from twisted.internet.defer import inlineCallbacks
