@@ -16,7 +16,7 @@ class AsyncMongoPipeline(object):
         mongo_uri = self.crawler.settings.get('MONGODB_URI', 'mongodb://localhost')
         db_name = self.crawler.settings.get('MONGODB_DB', 'scrapy_mongo_pipeline')
         self.ctx = ConnectionPool(mongo_uri)
-        self.db = getattr(self.ctx, db_name)
+        self.db = self.ctx[db_name]
 
     @classmethod
     def from_crawler(cls, crawler):
