@@ -2,7 +2,7 @@
 
 BOT_NAME = 'pyx_scrapy'
 
-SPIDER_MODULES = ['pyx_scrapy.spiders.tutor']
+SPIDER_MODULES = ['pyx_scrapy.spiders']
 
 NEWSPIDER_MODULE = 'pyx_scrapy.spiders'
 
@@ -18,31 +18,33 @@ REDIS_CONFIG = {
 }
 
 # 爬取的调度器
-SCHEDULER = 'pyx_scrapy_exts.scheduler.redis.scheduler.RedisScheduler'
-SCHEDULER_QUEUE_CLASS = 'pyx_scrapy_exts.scheduler.redis.queue.PriorityQueue'
-DUPEFILTER_CLASS = 'pyx_scrapy_exts.scheduler.dupefilter.RedisDupeFilter'
+# SCHEDULER = 'pyx_scrapy_exts.scheduler.redis.scheduler.RedisScheduler'
+# SCHEDULER_QUEUE_CLASS = 'pyx_scrapy_exts.scheduler.redis.queue.PriorityQueue'
+# DUPEFILTER_CLASS = 'pyx_scrapy_exts.scheduler.dupefilter.RedisDupeFilter'
 
 # CONCURRENT_REQUESTS = 32
 CONCURRENT_REQUESTS = 16
 
 DOWNLOADER_MIDDLEWARES = {
-    'pyx_scrapy_exts.downloadermiddlewares.useragent.RandomUserAgentMiddleware': 550,
     'pyx_scrapy_exts.downloadermiddlewares.referer.RefererMiddleware': 1000,
     'pyx_scrapy_exts.downloadermiddlewares.headers.HeadersMiddleware': 2000,
     # 'pyx_scrapy_exts.downloadermiddlewares.threshold.ThresholdErrorMiddleware': 9999,
     # replace by self define,not use both
-    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'pyx_scrapy_exts.downloadermiddlewares.proxypool.ProxyPoolMiddleware': 600,
+    # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    'pyx_scrapy_exts.downloadermiddlewares.useragent.RandomUserAgentMiddleware': 550,
+    # 'pyx_scrapy_exts.downloadermiddlewares.proxypool.ProxyPoolMiddleware': 600,
 }
 
 # EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 # }
 
-MONGODB_URI = 'mongodb://tk/scrapy'
-MONGODB_DB = 'scrapy'
+# MONGODB_URI = 'mongodb://tk:27017/scrapy'
+MONGODB_URI = 'mongodb://spider:spiderpass@192.168.1.231:27500/mzk_spiders'
+# MONGODB_DB = 'scrapy'
+MONGODB_DB = 'mzk_spiders'
 ITEM_PIPELINES = {
-    # 'pyscrapy.pipelines.mongo.MongoPipeline': 300,
+    'pyx_scrapy.pipelines.AsyncMongoPipeline': 300,
 }
 
 REDIRECT_ENABLED = True

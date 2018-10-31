@@ -22,4 +22,5 @@ def v2crawler():
 
 
 if __name__ == "__main__":
+    v1cmds()
     pass
