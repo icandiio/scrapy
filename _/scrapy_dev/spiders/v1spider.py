@@ -1,9 +1,8 @@
 import logging
 import time
 
-from pyx_scrapy_exts.const import Entity, ScrapyItem
-
 import scrapy
+from pyx_scrapy_exts.const import Entity, ScrapyItem
 
 logger = logging.getLogger(__name__)
 

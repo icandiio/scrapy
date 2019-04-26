@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
-BOT_NAME = 'pyx_scrapy'
+BOT_NAME = 'scrapy_dev'
 
-SPIDER_MODULES = ['pyx_scrapy.spiders']
+SPIDER_MODULES = ['scrapy_dev.spiders']
 
-NEWSPIDER_MODULE = 'pyx_scrapy.spiders'
+NEWSPIDER_MODULE = 'scrapy_dev.spiders'
 
 ROBOTSTXT_OBEY = False
 
 COMMANDS_MODULE = 'pyx_scrapy_exts.commands'
+EDITOR = 'vim'
 #
 REDIS_CONFIG = {
     "host": "tk",
@@ -45,7 +46,7 @@ MONGODB_URI = 'mongodb://spider:spiderpass@192.168.1.231:27500/mzk_spiders'
 # MONGODB_DB = 'scrapy'
 MONGODB_DB = 'mzk_spiders'
 ITEM_PIPELINES = {
-    # 'pyx_scrapy.pipelines.AsyncMongoPipeline': 300,
+    # 'scrapy_dev.pipelines.AsyncMongoPipeline': 300,
 }
 
 REDIRECT_ENABLED = True
